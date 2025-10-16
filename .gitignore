@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+
+# Virtual environment
+venv/
+.env
+
+# IDEs
+.vscode/
+.idea/
+
+# Python test cache
+.pytest_cache/
+
+# Migrations cache
+alembic/__pycache__/
+
+# Logs
+*.log

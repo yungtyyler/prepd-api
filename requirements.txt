@@ -1,0 +1,15 @@
+# Core Framework
+fastapi
+uvicorn[standard]
+
+# Database ORM and Driver
+sqlalchemy
+psycopg2-binary
+
+# Authentication (JWTs and Password Hashing)
+python-jose[cryptography]
+passlib[bcrypt]
+
+# Environment Variable Management
+python-dotenv
+pydantic-settings
