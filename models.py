@@ -1,6 +1,6 @@
 from typing import List
 import uuid
-from sqlalchemy import Column, Date, DateTime, Integer, String, Text, func
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from database import Base
@@ -48,7 +48,7 @@ class SavedRecipe(Base):
     image_url: Mapped[str] = mapped_column(String)
     instructions: Mapped[str] = mapped_column(Text)
     ingredients: Mapped[dict] = mapped_column(JSONB)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey=("users.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
 
     # Timestamps
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -65,8 +65,8 @@ class MealPlan(Base):
     __tablename__ = "meal_plan"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey=("users.id"), nullable=False)
-    saved_recipe_id: Mapped[int] = mapped_column(Integer, ForeignKey=("saved_recipes.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    saved_recipe_id: Mapped[int] = mapped_column(Integer, ForeignKey("saved_recipes.id"), nullable=False)
     plan_date: Mapped[Date] = mapped_column(Date, nullable=False)
 
     # Timestamps

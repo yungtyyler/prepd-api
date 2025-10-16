@@ -3,4 +3,4 @@ import os
 
 load_dotenv()
 
-NEON_DB_URL = os.getenv("NEON_DB_URL")
+DATABASE_URL = os.getenv("DATABASE_URL")
