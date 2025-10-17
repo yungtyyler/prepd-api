@@ -8,7 +8,7 @@ psycopg2-binary
 
 # Authentication (JWTs and Password Hashing)
 python-jose[cryptography]
-passlib[bcrypt]
+argon2-cffi
 
 # Environment Variable Management
 python-dotenv

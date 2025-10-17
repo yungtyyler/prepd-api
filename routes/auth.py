@@ -1,15 +1,13 @@
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
 from database import get_db
 import models
+from schemas import Token, User, UserCreate, UserPublic
 
 # --- Configuration ---
 # Load secret key and algorithm from environment variables.
@@ -19,10 +17,6 @@ ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 
 router = APIRouter()
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """
@@ -59,3 +53,24 @@ def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depen
     access_token = create_access_token(data={ "sub": user.email }, expires_delta=access_token_expires)
 
     return { "access_token": access_token, "token-type": "Bearer" }
+
+@router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    """
+    Create a new user in the database.
+    """
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+
+    if db_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already in use."
+        )
+
+    new_user = models.User(email=user.email, password=user.password)
+    
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user

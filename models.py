@@ -1,13 +1,12 @@
 from typing import List
 import uuid
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from database import Base
-from passlib.context import CryptContext
+from argon2 import PasswordHasher
 
-# This handles salt generation and encoding automatically.
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+ph = PasswordHasher()
 
 class User(Base):
     __tablename__ = "users"
@@ -30,10 +29,10 @@ class User(Base):
         self.set_password(password)
     
     def set_password(self, password):
-        self._password_hash = pwd_context.hash(password)
+        self._password_hash = ph.hash(password)
     
     def check_password(self, password):
-        return pwd_context.verify(password, self._password_hash)
+        return ph.verify(self._password_hash, password)
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}')>"
