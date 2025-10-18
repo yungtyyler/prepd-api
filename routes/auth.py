@@ -1,22 +1,16 @@
-import os
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-from jose import jwt
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
+from config import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY
 from database import get_db
 import models
-from schemas import Token, User, UserCreate, UserPublic
+from schemas import Token, UserCreate, UserPublic
 
-# --- Configuration ---
-# Load secret key and algorithm from environment variables.
-# These are crucial for signing the JWT.
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
-
-router = APIRouter()
+router = APIRouter(prefix='/auth', tags=["Authentication"])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """
@@ -34,6 +28,35 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, str(SECRET_KEY), algorithm=str(ALGORITHM))
     return encoded_jwt
 
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    """
+    This function is our security guard.
+    1. It uses `oauth2_scheme` to get the token.
+    2. It decodes and validates the token.
+    3. It fetches the user from the database.
+    4. It returns the user object if valid, or raises an exception if not.
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, str(SECRET_KEY), algorithms=[str(ALGORITHM)])
+        subject = payload.get("sub")
+        
+        if not isinstance(subject, str):
+            raise credentials_exception
+            
+        email: str = subject
+        
+    except JWTError:
+        raise credentials_exception
+    
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if user is None:
+        raise credentials_exception
+    return user
 
 @router.post("/token", response_model=Token)
 def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db)):
@@ -52,9 +75,9 @@ def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depen
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={ "sub": user.email }, expires_delta=access_token_expires)
 
-    return { "access_token": access_token, "token-type": "Bearer" }
+    return { "access_token": access_token, "token_type": "Bearer" }
 
-@router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
+@router.post("/auth/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """
     Create a new user in the database.

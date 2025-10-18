@@ -6,6 +6,9 @@ uvicorn[standard]
 sqlalchemy
 psycopg2-binary
 
+# HTTP Client
+httpx
+
 # Authentication (JWTs and Password Hashing)
 python-jose[cryptography]
 argon2-cffi
