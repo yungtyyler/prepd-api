@@ -37,6 +37,8 @@ class MealPlanBase(BaseModel):
     id: int
     user_id: uuid.UUID
     recipe: SavedRecipe
+    plan_date: datetime.datetime
+    saved_recipe_id: int
     model_config = ConfigDict(from_attributes=True)
 
 class MealPlanCreate(MealPlanBase):

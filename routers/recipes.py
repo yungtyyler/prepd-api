@@ -5,7 +5,7 @@ from database import get_db
 import schemas
 import models
 from sqlalchemy.orm import Session
-from routes.auth import get_current_user
+from routers.auth import get_current_user
 
 router = APIRouter(prefix="/recipes", tags=["Recipes"])
 

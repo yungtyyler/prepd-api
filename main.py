@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes import auth, recipes
+from routers import auth, recipes
 
 app = FastAPI(title="Prepd", version="0.1.0")
 
