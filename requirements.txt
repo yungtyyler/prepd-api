@@ -16,3 +16,5 @@ argon2-cffi
 # Environment Variable Management
 python-dotenv
 pydantic-settings
+
+pydantic[email]
